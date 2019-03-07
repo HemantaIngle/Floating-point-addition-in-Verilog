@@ -1,0 +1,569 @@
+// Code your testbench here
+// or browse Examples
+// Code your testbench here
+// or browse Examples
+module tb();
+  reg [11:0] a1, b1,a2,b2,c,next,fraction,g,h;
+  reg [13:0] m_1,m_2,m_2_c;
+  reg [13:0] result,result_c;
+  reg [3:0] res_int;
+  reg [9:0] man,man1,man2, res_m;
+  reg [4:0] e,e1,e2,exp, res_e,diff;
+  reg s,s1,s2, res_s;
+  reg [11:0] f,f1,f2,res_man;
+  initial  begin
+    a1= 11;
+    b1= 450;
+    s1=0;
+    a2= 12;
+    b2= 350;
+    s2=1;
+    g=145;
+    //b = dec2bin(a);
+    //$display("%b",a);
+    //$display("%b %b %b %b %b %b",a[5],a[4], a[3], a[2], a[1], a[0]);
+    /*if (a[7]==1) begin
+      fraction = myfunc(b);
+      m = {a[6:0],{4{1'b0}}};
+      e = 20;
+      s = 0;
+      
+      $display("Real to bits = %d",fraction);
+      $display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);
+    end
+    */
+  
+  end
+  initial begin
+  	
+    f1 = dec2bin(b1);
+    f2 = dec2bin(b2);
+     // $display("Received Fraction %b", fraction);
+    //t1(g,h);
+    //$display(" h = %d",h);
+    $display("Binary Number 1 %b.%b",a1,f1);
+    $display("Binary Number 2 %b.%b",a2,f2);
+    
+    e=0;
+    man=0;
+    normalise(a1,f1,e,man);
+    
+    e1=e;
+    man1=man;
+   
+    e=0;
+    man=0;
+    $display("Number 1 Sign bit = %b",s1);
+    $display("Number 1 Expoment = %b",e1);
+    $display("Number 1 Mantissa = %b",man1);
+    
+    normalise(a2,f2,e,man);
+   
+    e2=e;
+    man2=man;
+    $display("Number 2 Sign bit = %b",s2);
+    $display("Number 2 Expoment = %b",e2);
+    $display("Number 2 Mantissa = %b",man2);
+    
+    //add_2(e1,m1,e2,m2,result);
+    if ((s1 == 0) && (s2==0)) begin
+        if (e1==e2) begin
+          m_1 = {{3{1'b0}},1,man1};
+          m_2 = {{3{1'b0}},1,man2};
+          $display("++++ SIGN = EXP SAME mantissa 1 %b mantissa 2 %b",m_1,m_2);
+          arithmetic(m_1,m_2,e1,res_s,res_e,res_m);
+        end
+        
+      else if (e1 > e2) begin
+        diff = e1 - e2;
+        m_1 = {{3{1'b0}},1,man1};
+        m_2 = {{3{1'b0}},1,man2};
+        $display("Shift required e1>e2");
+        $display("before shift m_2 = %b",m_2);
+        m_2 = m_2 >> diff;
+        $display ("After Shift m_2 = %b",m_2);
+        
+        $display("+++++ SIGN != EXP mantissa 1 %b mantissa 2 %b",m_1,m_2);
+        arithmetic(m_1,m_2,e1,res_s,res_e,res_m);
+      end
+      else if (e2 > e1) begin
+       diff = e2 - e1;
+        m_1 = {{3{1'b0}},1,man1};
+        m_2 = {{3{1'b0}},1,man2};
+        $display("Shift required e2>e1");
+        $display("before shift m_1 = %b",m_1);
+        m_1 = m_1 >> diff;
+        $display ("After Shift m_1 = %b",m_1);
+        $display("+++++ SIGN != EXP mantissa 1 %b mantissa 2 %b",m_1,m_2);
+        arithmetic(m_1,m_2,e2,res_s,res_e,res_m);
+     end
+    end
+    
+   else begin
+     if (e1==e2) begin
+              m_1 = {{3{1'b0}},1,man1};
+              m_2 = {{3{1'b0}},1,man2};
+
+              //if (m_1 > m_2) begin
+       
+              $display("Before Negation m_2 %b",m_2);
+              m_2_c = ~m_2;
+              m_2 = m_2_c + 1;
+       $display("Sub ---- SIGN = EXP mantissa 1 %b mantissa 2 %b",m_1,m_2);
+       arithmetic(m_1,m_2,e1,res_s,res_e,res_m);
+              
+        //end
+      end
+     else if (e1 > e2) begin
+        diff = e1 - e2;
+        m_1 = {{3{1'b0}},1,man1};
+        m_2 = {{3{1'b0}},1,man2};
+        $display("Sign Minus Shift required e1>e2");
+        $display("before shift m_2 = %b",m_2);
+        m_2 = m_2 >> diff;
+        $display ("After Shift m_2 = %b",m_2);
+        m_2_c = ~m_2;
+        m_2 = m_2_c + 1;
+        $display("Sub ---- SIGN != EXP e1>e2 mantissa 1 %b mantissa 2 %b",m_1,m_2);
+        arithmetic(m_1,m_2,e1,res_s,res_e,res_m);
+      end
+     else if (e2 > e1) begin
+       diff = e2 - e1;
+       m_1 = {{3{1'b0}},1,man1};
+       m_2 = {{3{1'b0}},1,man2};
+       $display("Sign Minus Shift required e2>e1");
+       $display("before shift m_1 = %b",m_1);
+       m_1 = m_1 >> diff;
+       $display ("After Shift m_1 = %b",m_1);
+       $display("Sub ---- SIGN != EXP e2>e1 mantissa 1 %b mantissa 2 %b",m_1,m_2);
+       m_2_c = ~m_2;
+       m_2 = m_2_c + 1;
+       arithmetic(m_1,m_2,e2,res_s,res_e,res_m);
+    end
+  end
+  end
+    
+  function reg [11:0] dec2bin([11:0] b);
+      f[11] = myfunc_1(b,b);
+      //$display("f[11] %b",f[11]);
+      next = myfunc_2(b,b);
+      //$display("next %d",next);
+      
+      f[10] = myfunc_1(next,b);
+      //$display("f[10] %b",f[10]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[9] = myfunc_1(next,b);
+      //$display("f[9] %b",f[9]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[8] = myfunc_1(next,b);
+      //$display("f[8] %b",f[8]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[7] = myfunc_1(next,b);
+      //$display("f[7] %b",f[7]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[6] = myfunc_1(next,b);
+      //$display("f[6] %b",f[6]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[5] = myfunc_1(next,b);
+      //$display("f[5] %b",f[5]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[4] = myfunc_1(next,b);
+      //$display("f[4] %b",f[4]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[3] = myfunc_1(next,b);
+      //$display("f[3] %b",f[3]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[2] = myfunc_1(next,b);
+      //$display("f[2] %b",f[2]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[1] = myfunc_1(next,b);
+      //$display("f[1] %b",f[1]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      f[0] = myfunc_1(next,b);
+      //$display("f[0] %b",f[0]);
+      next = myfunc_2(next,b);
+      //$display("next %d",next);
+      
+      //$display("Fraction %b",f);
+      return f;
+    
+  endfunction
+  
+  function myfunc_1([11:0] b, [11:0] check);
+    if(check > 99) begin
+      c = b * 2;
+      //$display("c = %d", c);
+      if (c >= 1000) 
+        return 1;
+      
+      else 
+        return 0;
+      
+    end
+    
+    else if((check > 9) && (check < 100)) begin
+      	c = b * 2;
+      	//$display("c = %d", c);
+        if (c >= 1000) 
+        	return 1;
+      
+      	else 
+        	return 0;
+      
+    	end
+    else if((check > 0) && (check < 10)) begin
+      	c = b * 2;
+      	//$display("c = %d", c);
+       if (c >= 1000) 
+        	return 1;
+      
+      	else 
+       	 	return 0;
+   
+    end
+    
+    else 
+      return 0;
+    
+    endfunction
+    
+  function reg [11:0] myfunc_2([11:0] b, [11:0] check);
+    if(check>99) begin
+        c = b * 2;
+      	//$display("fun 1 c %d",c);
+        if (c >= 1000) begin
+            next = c - 1000;
+            return next;
+        end
+
+        else begin
+            next = c;
+            return next;
+        end
+    end
+    
+    else if((check > 9) && (check < 100)) begin
+        c = b * 2;
+        //$display("fun 2 c %d",c);
+        if (c >= 1000) begin
+            next = c - 1000;
+            return next;
+        end
+
+        else begin
+            next = c;
+            return next;
+        end
+    end
+    
+    else if((check > 0) && (check < 10)) begin
+        c = b * 2;
+      	//$display("fun 3 c %d",c);
+        if (c >= 1000) begin
+            next = c - 1000;
+            return next;
+        end
+
+        else begin
+            next = c;
+            return next;
+        end
+    end
+  endfunction
+   
+  /*task t1 (input [11:0] g, output [11:0] h);
+    
+    if (g> 10) begin
+      $display("g=%d",g);
+      h=g;
+      $display("inside task h = %d",h);
+    end
+    
+  endtask*/
+  
+  task normalise (input [11:0] a, [11:0] f, output [4:0] e, output 		[9:0] man);
+    $display("Inside Task a = %b f = %b",a,f);
+    if (a[11]==1) begin
+      e=26;
+      man=a[10:0];
+      
+      $display("here 1");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+    end
+    
+    else if (a[10]==1) begin
+      e=25;
+      man=a[9:0];
+    
+      $display("here 2");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[9]==1) begin
+      e=24;
+      man={a[8:0],f[11]};
+      
+      $display("here 3");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[8]==1) begin
+      e=23;
+      man={a[7:0],f[11],f[10]};
+      
+      $display("here 4");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[7]==1) begin
+      e=22;
+      man={a[6:0],f[11],f[10],f[9]};
+      
+      $display("here 5");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[6]==1) begin
+      e=21;
+      man={a[5:0],f[11],f[10],f[9],f[8]};
+      
+      $display("here 6");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[5]==1) begin
+      e=20;
+      man={a[4:0],f[11],f[10],f[9],f[8],f[7]};
+      
+      $display("here 7");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[4]==1) begin
+      e=19;
+      man={a[3:0],f[11],f[10],f[9],f[8],f[7],f[6]};
+      
+      $display("here 8");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[3]==1) begin
+      e=18;
+      man={a[2:0],f[11],f[10],f[9],f[8],f[7],f[6],f[5]};
+      
+      $display("here 9");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[2]==1) begin
+      e=17;
+      man={a[1:0],f[11],f[10],f[9],f[8],f[7],f[6],f[5],f[4]};
+      
+      $display("here 10");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (a[1]==1) begin
+      e=16;
+      man={a[0],f[11],f[10],f[9],f[8],f[7],f[6],f[5],f[4],f[3]};
+      s=0;
+      $display("here 11"); 
+      $display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);
+  	end
+    
+    else if (a[0]==1) begin
+      e=15;
+      man={f[11],f[10],f[9],f[8],f[7],f[6],f[5],f[4],f[3],f[2]};
+      
+      $display("here 12");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+  	end
+    
+    else if (f[11] == 1) begin
+      e=14;
+      man=f[10:1];
+      
+      $display("here 13");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/
+    end
+    
+    else if (f[10] == 1) begin
+      e=13;
+      man=f[9:0];
+      
+      $display("here 14");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+    
+    else if (f[9] == 1) begin
+      e=12;
+      man={f[8:0],{1{1'b0}}};
+      
+      $display("here 15");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+    
+    else if (f[8] == 1) begin
+      e=11;
+      man={f[7:0],{2{1'b0}}};
+      
+      $display("here 16");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+    
+    else if (f[7] == 1) begin
+      e=10;
+      man={f[6:0],{3{1'b0}}};
+      
+      $display("here 17");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+    
+    else if (f[6] == 1) begin
+      e=9;
+      man={f[5:0],{4{1'b0}}};
+      
+      $display("here 18");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+    
+    else if (f[5] == 1) begin
+      e=8;
+      man={f[4:0],{5{1'b0}}};
+      
+      $display("here 19");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+    
+    else if (f[4] == 1) begin
+      e=7;
+      man={f[3:0],{6{1'b0}}};
+      
+      $display("here 20");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+    
+    else if (f[3] == 1) begin
+      e=6;
+      man={f[2:0],{7{1'b0}}};
+      
+      $display("here 21");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+    
+    else if (f[2] == 1) begin
+      e=5;
+      man={f[1:0],{8{1'b0}}};
+      
+      $display("here 22");
+      /*$display("Sign bit = %b",s);
+      $display("Expoment = %b",e);
+      $display("Mantissa = %b",man);*/   
+    end
+  endtask
+  
+  /*task add_2(input [4:0] exp1,exp2, input [9:0] man_1,man_2, output [11:0] result)
+  endtask */
+  task arithmetic(input [13:0] m_1,m_2,input [4:0]exp, output res_s,output [4:0] res_e, output [9:0] res_m);
+    		  $display("Mantissa 1 %b Mantissa 2 %b",m_1,m_2);
+              result = m_1 + m_2;
+              /*$display("MINUS result %b",result);
+              res_man = {result[9:0],{2{1'b0}}};
+              res_int = result[13:10];
+              $display("MINUS res_int %b",res_int);
+              $display("MINUS res_man %b",res_man);
+              normalise(res_int, res_man, e, man);*/
+              if (result[13]==1 && result[12]==1) begin
+                res_s = 1;
+                //$display("After 2'C");
+                result_c = ~result;
+                result = result_c + 1;
+                $display("----- Result %b",result);
+                res_man = {result[9:0],{2{1'b0}}};
+                res_int = result[13:10];
+                $display("--- Res_int %b",res_int);
+                $display("--- Res_man %b",res_man);
+                normalise(res_int, res_man, e, man);
+              end
+              else if (result[13]==0 && result[12]==0) begin
+                res_s = 0;
+                $display("+++++ Result %b",result);
+                res_man = {result[9:0],{2{1'b0}}};
+                res_int = result[13:10];
+                $display("+++ Res_int %b",res_int);
+                $display("+++ Res_man %b",res_man);
+                normalise(res_int, res_man, e, man);
+              end
+              res_e = (exp+e)-15;
+              res_m = man;
+              $display("Result Sign bit = %b",res_s);
+              $display("Result Expoment = %b",res_e);
+              $display("Result Mantissa = %b",res_m);
+  endtask
+endmodule
+
+
